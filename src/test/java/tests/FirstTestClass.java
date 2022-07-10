@@ -54,6 +54,23 @@ public class FirstTestClass {
     }
 
     @Test
+    public void shouldNotBePossibleToUpdateAdultsTo0() {
+        Integer expected = 1;
+        stays.enterAdultsNumber(0);
+        Assert.assertEquals(expected, stays.getAdultsNumber());
+        Assert.assertEquals("1 adult", stays.getAdultsCount());
+    }
+
+    @Test
+    public void shouldNotBePossibleToUpdateAdultsToMoreThanMax() {
+        Integer max = 30;
+        stays.enterAdultsNumber(max+1);
+        Assert.assertEquals(max, stays.getAdultsNumber());
+        Assert.assertEquals(max + " adults", stays.getAdultsCount());
+
+    }
+
+    @Test
     public void childAgeSelectShouldBeDisplayedIfChildrenNumberIsNotZero() {
         int childrenNumber = 2;
         stays.enterChildrenNumber(childrenNumber);
@@ -61,16 +78,20 @@ public class FirstTestClass {
         Assert.assertEquals(childrenNumber, stays.getChildAgeControlsNumber());
     }
 
+    @Test
+    public void testDateSelection() {
+        String checkInDate = "12 July 2022";
+        String checkOutDate = "19 July 2022";
+        stays.openCalendar();
+        stays.selectDate(checkInDate);
+        stays.selectDate(checkOutDate);
+
+    }
 
     @After
     public void tearDown() throws Exception {
-        driver.quit();
+       // driver.quit();
     }
-
-
-
-
-
 
 
 

@@ -1,15 +1,11 @@
 package pages;
 
-import dev.failsafe.internal.util.Assert;
-import org.asynchttpclient.util.Assertions;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
-import org.openqa.selenium.support.events.WebDriverListener;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
@@ -34,6 +30,7 @@ public class BookingStays {
     WebElement nextMonth;
 
     String calendarMonths = "//div[@class='bui-calendar__month']";
+    String calendarDateTemplate = "//span[@aria-label='%d']";
 
 //    @FindBy(xpath = "(//div[@class='bui-calendar__wrapper'])[0]")
 //    WebElement checkInDateCalendar;
@@ -72,7 +69,7 @@ public class BookingStays {
     WebElement increaseAdultsNumber;
 
     @FindBy(xpath = "//span[@data-children-count='']")
-    WebElement cildrenCount;
+    WebElement childrenCount;
 
     @FindBy(xpath = "//div[contains(@class, 'children')]//span[contains(@data-bui-ref, 'value')]")
     WebElement childrenNumber;
@@ -100,6 +97,8 @@ public class BookingStays {
     String suggestedDestinationsLocator = "//ul//li//span[@class='search_hl_name']";
 
     String destinationLocatorTemplate = "//ul//li//span[text()='%d']";
+
+    String dateTemplate = "//span[@aria-label='%d']";
 
     public BookingStays(WebDriver driver) {
         this.driver = driver;
@@ -144,17 +143,15 @@ public class BookingStays {
         }
     }
 
-    public void selectCheckInDate(String date) {
-        openCalendar();
-        driver.findElement(dateLocatorFromTemplate(date)).click();
-
+    public void selectDate(String date) {
+        String[] dayMonthYear = date.split(" ");
+        String day = dayMonthYear[0];
+        String month = dayMonthYear[1];
+        int year = Integer.parseInt(dayMonthYear[2]);
+        selectMonthYear(month, year);
+        selectDay(day);
     }
 
-    public void selectCheckOutDate(String date) {
-        openCalendar();
-        driver.findElement(dateLocatorFromTemplate(date)).click();
-
-    }
 
 //Guests
     public String getAdultsCount() {
@@ -173,6 +170,24 @@ public class BookingStays {
             }
         }
     }
+
+    public Integer getAdultsNumber() {
+        return Integer.parseInt(adultsNumber.getText());
+    }
+
+//    public boolean isDecreaseAdultsEnabled() {
+//        if(decreaseAdultsNumber.isEnabled()) {
+//            return true;
+//        }
+//        return false;
+//    }
+//
+//    public boolean isIncreaseAdultsEnabled() {
+//        if(increaseAdultsNumber.isEnabled()) {
+//            return true;
+//        }
+//        return false;
+//    }
 
     public void enterChildrenNumber(int childrenNumber) {
         openGuestsArea();
@@ -201,9 +216,6 @@ public class BookingStays {
 
 
 //Help private methods
-    private Integer getAdultsNumber() {
-        return Integer.parseInt(adultsNumber.getText());
-    }
 
     private int getChildrenNumber() {
         return Integer.parseInt(childrenNumber.getText());
@@ -243,13 +255,100 @@ public class BookingStays {
     }
 
     private By dateLocatorFromTemplate(String date) {
-        String locator = "//div//td[@data-date='" + date + "']";
+        String locator = "//td[@data-date='" + date + "']";
         return By.xpath(locator);
     }
 
-    private List<WebElement> getMonths() {
+    private List<WebElement> getMonthsDisplayed() {
         List<WebElement> months = driver.findElements(By.xpath(calendarMonths));
         return months;
     }
+
+    private void selectMonthYear(String month, int year) {
+        int firstCalMonthNum;
+        int monthToSelectNum = getMonthNumber(month);
+        int firstCalYear = getYearFromCalendar();
+        int currentYear = getCurrentYear();
+
+        //Check year and move to the next month-year if needed
+        if(year >= currentYear && year > firstCalYear) {
+            do {
+                nextMonth.click();
+                //get new first calendar year
+                firstCalYear = getYearFromCalendar();
+
+            } while(year > firstCalYear);
+        }
+        //Check month and move to the next month if needed
+        firstCalMonthNum = getMonthNumberFromCalendar();
+        if(monthToSelectNum > firstCalMonthNum) {
+            int diff = monthToSelectNum - firstCalMonthNum;
+            for(int i = 0; i < diff; i++) {
+                nextMonth.click();
+            }
+        }
+    }
+
+    private void selectDay(String day) {
+        driver.findElement(By.xpath("//span[text()='" + day + "']")).click();
+    }
+    private int getMonthNumberFromCalendar() {
+        List<WebElement> months = getMonthsDisplayed();
+        String[] first = months.get(0).getText().split(" ");
+        String firstCalMonth = first[0];
+        int firstCalMonthNum = getMonthNumber(firstCalMonth);
+        return firstCalMonthNum;
+    }
+
+    private int getYearFromCalendar() {
+        List<WebElement> months = getMonthsDisplayed();
+        String[] first = months.get(0).getText().split(" ");
+        String firstCalYear = first[1];
+        return Integer.parseInt(firstCalYear);
+
+    }
+
+    private int getCurrentYear() {
+        //replace with year from sysdate
+        return 2022;
+    }
+
+    private String getCurrentMonth() {
+        //replace with month from sysdate
+        return "July";
+    }
+
+    private int getMonthNumber(String month) {
+        switch(month) {
+            case "January":
+                return 1;
+            case "February":
+                return 2;
+            case "March":
+                return 3;
+            case "April":
+                return 4;
+            case "May":
+                return 5;
+            case "June":
+                return 6;
+            case "July":
+                return 7;
+            case "August":
+                return 8;
+            case "September":
+                return 9;
+            case "October":
+                return 10;
+            case "November":
+                return 11;
+            case "December":
+                return 12;
+        }
+        return -1;
+    }
+
+
+
 
 }
