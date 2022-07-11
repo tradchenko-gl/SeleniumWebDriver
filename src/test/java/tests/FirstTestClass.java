@@ -1,5 +1,6 @@
 package tests;
 
+import helpMethods.DateHelpMethods;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -10,14 +11,13 @@ import pages.BookingCookiesPreferences;
 import pages.BookingStays;
 
 import java.time.Duration;
+import java.time.LocalDate;
 
 public class FirstTestClass {
     WebDriver driver;
-    //String baseURL = "https://www.expedia.com";
     String baseURL = "https://www.booking.com/";
     BookingCookiesPreferences cookiesPreferences;
     BookingStays stays;
-    //StaysPage staysPage;
 
 
     @Before
@@ -78,19 +78,31 @@ public class FirstTestClass {
         Assert.assertEquals(childrenNumber, stays.getChildAgeControlsNumber());
     }
 
+//    @Test
+//    public void testDateSelection() {
+//        String checkInDate = "12 September 2022";
+//        String checkOutDate = "19 October 2022";
+//        //stays.openCalendar();
+//        stays.selectDate(checkInDate);
+//        stays.selectDate(checkOutDate);
+//    }
+
     @Test
-    public void testDateSelection() {
-        String checkInDate = "12 July 2022";
-        String checkOutDate = "19 July 2022";
-        stays.openCalendar();
+    public void testDateSelectionWithLocalDate() {
+        DateHelpMethods dateHelper = new DateHelpMethods();
+        LocalDate checkInDate = LocalDate.parse("2022-07-15");
+        LocalDate checkOutDate = LocalDate.parse("2022-09-09");
         stays.selectDate(checkInDate);
         stays.selectDate(checkOutDate);
+        Assert.assertEquals(dateHelper.getDateToBeDisplayed(checkInDate), stays.getCheckInDateValue());
+        Assert.assertEquals(dateHelper.getDateToBeDisplayed(checkOutDate), stays.getCheckOutDateValue());
 
     }
 
+
     @After
     public void tearDown() throws Exception {
-       // driver.quit();
+        driver.quit();
     }
 
 

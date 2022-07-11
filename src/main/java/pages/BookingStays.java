@@ -1,5 +1,6 @@
 package pages;
 
+import helpMethods.DateHelpMethods;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -9,6 +10,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.List;
 
 public class BookingStays {
@@ -28,6 +30,12 @@ public class BookingStays {
 
     @FindBy(xpath = "//div[@data-bui-ref='calendar-next']")
     WebElement nextMonth;
+
+    @FindBy(xpath = "//div[@data-placeholder='Check-in']")
+    WebElement checkInDateValue;
+
+    @FindBy(xpath = "//div[@data-placeholder='Check-out']")
+    WebElement checkOutDateValue;
 
     String calendarMonths = "//div[@class='bui-calendar__month']";
     String calendarDateTemplate = "//span[@aria-label='%d']";
@@ -148,10 +156,34 @@ public class BookingStays {
         String day = dayMonthYear[0];
         String month = dayMonthYear[1];
         int year = Integer.parseInt(dayMonthYear[2]);
-        selectMonthYear(month, year);
+        openCalendar();
+        selectYearMonth(month, year);
         selectDay(day);
     }
 
+    public void selectDate(LocalDate date) {
+        //Check if date  is not in the past
+        LocalDate currentDate = LocalDate.now();
+        if(date.isBefore(currentDate)) {
+            System.out.println("Date cannot be in the past");
+        }
+        //if date is not in the past select it from Calendar
+        int year = date.getYear();
+        int month = date.getMonthValue();
+        int day = date.getDayOfMonth();
+
+        openCalendar();
+        selectYearMonth(year, month);
+        selectDay(day);
+    }
+
+    public String getCheckInDateValue() {
+        return checkInDateValue.getText();
+    }
+
+    public String getCheckOutDateValue() {
+        return checkOutDateValue.getText();
+    }
 
 //Guests
     public String getAdultsCount() {
@@ -264,12 +296,11 @@ public class BookingStays {
         return months;
     }
 
-    private void selectMonthYear(String month, int year) {
+    private void selectYearMonth(String month, int year) {
         int firstCalMonthNum;
-        int monthToSelectNum = getMonthNumber(month);
+        int monthToSelectNum = DateHelpMethods.getMonthNumber(month);
         int firstCalYear = getYearFromCalendar();
-        int currentYear = getCurrentYear();
-
+        int currentYear = DateHelpMethods.getCurrentYear();
         //Check year and move to the next month-year if needed
         if(year >= currentYear && year > firstCalYear) {
             do {
@@ -289,14 +320,43 @@ public class BookingStays {
         }
     }
 
+    private void selectYearMonth(int year, int month) {
+        int firstCalendarMonth;
+        int firstCalendarYear = getYearFromCalendar();
+        int currentYear = DateHelpMethods.getCurrentYear();
+
+        if(year >= currentYear && year > firstCalendarYear) {
+            do {
+                nextMonth.click();
+                //get new first calendar year
+                firstCalendarYear = getYearFromCalendar();
+
+            } while(year > firstCalendarYear);
+        }
+
+        firstCalendarMonth = getMonthNumberFromCalendar();
+        if(month > firstCalendarMonth) {
+            int diff = month - firstCalendarMonth;
+            for(int i = 0; i < diff; i++) {
+                nextMonth.click();
+            }
+        }
+
+    }
+
     private void selectDay(String day) {
         driver.findElement(By.xpath("//span[text()='" + day + "']")).click();
     }
+
+    private void selectDay(int day) {
+        driver.findElement(By.xpath("//span[text()='" + day + "']")).click();
+    }
+
     private int getMonthNumberFromCalendar() {
         List<WebElement> months = getMonthsDisplayed();
         String[] first = months.get(0).getText().split(" ");
         String firstCalMonth = first[0];
-        int firstCalMonthNum = getMonthNumber(firstCalMonth);
+        int firstCalMonthNum = DateHelpMethods.getMonthNumber(firstCalMonth);
         return firstCalMonthNum;
     }
 
@@ -307,48 +367,6 @@ public class BookingStays {
         return Integer.parseInt(firstCalYear);
 
     }
-
-    private int getCurrentYear() {
-        //replace with year from sysdate
-        return 2022;
-    }
-
-    private String getCurrentMonth() {
-        //replace with month from sysdate
-        return "July";
-    }
-
-    private int getMonthNumber(String month) {
-        switch(month) {
-            case "January":
-                return 1;
-            case "February":
-                return 2;
-            case "March":
-                return 3;
-            case "April":
-                return 4;
-            case "May":
-                return 5;
-            case "June":
-                return 6;
-            case "July":
-                return 7;
-            case "August":
-                return 8;
-            case "September":
-                return 9;
-            case "October":
-                return 10;
-            case "November":
-                return 11;
-            case "December":
-                return 12;
-        }
-        return -1;
-    }
-
-
 
 
 }
